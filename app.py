@@ -7,6 +7,7 @@ import time
 from bs4 import BeautifulSoup
 import re
 import pymysql
+import csv
 
 db = pymysql.connect("localhost", "root","","my_atomy" )
 cursor = db.cursor()
@@ -17,6 +18,7 @@ product_url = base_url + '/tw/Home/Product/MallMain'
 titles = []
 prices = []
 points = []
+csv_file = 'atomy_products.csv'
 
 for page in range(1, 7):
     print('get next page: ', page)
@@ -48,17 +50,23 @@ for page in range(1, 7):
         prices.append(all_price[i].text.strip().replace('會員價格', '').replace('元', '').replace(':', ''))
         points.append(all_point[i].text.strip().replace('PV', '').replace(':', ''))
 
-for i in range(len(titles)):
-    title_str = titles[i].strip()
-    price_str = ''.join(c for c in prices[i].strip() if c.isnumeric())
-    point_str = points[i].strip()
+with open(csv_file, 'w', newline='') as csvfile:
+    writer = csv.writer(csvfile)
+    writer.writerow(['名稱', '價格', 'PV'])
 
-    sql = "INSERT INTO products(name, price, point, updated_at) VALUES ('%s', '%s', '%s', NOW())" % (title_str, price_str, point_str)
-    try:
-        cursor.execute(sql)
-        db.commit()
-    except Exception as ex:
-        print(ex)
-        db.rollback()
+
+    for i in range(len(titles)):
+        title_str = titles[i].strip()
+        price_str = ''.join(c for c in prices[i].strip() if c.isnumeric())
+        point_str = points[i].strip()
+
+        sql = "INSERT INTO products(name, price, point, updated_at) VALUES ('%s', '%s', '%s', NOW())" % (title_str, price_str, point_str)
+        try:
+            cursor.execute(sql)
+            db.commit()
+            writer.writerow([title_str, price_str, point_str])
+        except Exception as ex:
+            print(ex)
+            db.rollback()
 
 db.close()
