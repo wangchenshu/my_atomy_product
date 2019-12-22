@@ -17,9 +17,6 @@ product_url = base_url + '/tw/Home/Product/MallMain'
 titles = []
 prices = []
 points = []
-titles2 = []
-prices2 = []
-points2 = []
 
 for page in range(1, 7):
     print('get next page: ', page)
@@ -51,20 +48,15 @@ for page in range(1, 7):
         prices.append(all_price[i].text.strip().replace('會員價格', '').replace('元', '').replace(':', ''))
         points.append(all_point[i].text.strip().replace('PV', '').replace(':', ''))
 
-[titles2.append(i) for i in titles if not i in titles2]
-[prices2.append(i) for i in prices if not i in prices2]
-[points2.append(i) for i in points if not i in points2]
-
-for i in range(len(titles2)):
-    title_str = titles2[i].strip()
-    price_str = ''.join(c for c in prices2[i].strip() if c.isnumeric())
-    point_str = points2[i].strip()
+for i in range(len(titles)):
+    title_str = titles[i].strip()
+    price_str = ''.join(c for c in prices[i].strip() if c.isnumeric())
+    point_str = points[i].strip()
 
     sql = "INSERT INTO products(name, price, point, updated_at) VALUES ('%s', '%s', '%s', NOW())" % (title_str, price_str, point_str)
     try:
         cursor.execute(sql)
         db.commit()
-        # print('success to insert')
     except Exception as ex:
         print(ex)
         db.rollback()
